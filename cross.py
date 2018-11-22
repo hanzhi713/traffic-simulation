@@ -34,8 +34,8 @@ class Car:
         """
         self.wait_time = 0 # Its own time
         self.dest = init_dest # The length of the edge it is on
-        self.current_cross = cross_road  # Its current crossroad queue
-        self.dist_to_cross = init_dist # Its previous cross road node
+        self.current_cross = cross_road  # Its previous cross road node
+        self.dist_to_cross = init_dist # Its current crossroad queue
         self.actions = actions # A sequence of the nodes it has to reach
         self.cross_time = 2 # The time it passes through a cross road
         self.updated = False # Whether it is in the waiting queue/pass in progress queue
