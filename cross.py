@@ -3,32 +3,48 @@ import networkx as nx
 
 
 class CrossRoad:
-    def __init__(self, ns_state, we_state):
-        self.west = []
-        self.east = []
-        self.north = []
-        self.south = []
-        self.all = [self.north, self.south, self.west, self.east]
-        self.pass_in_prog = {}
+    def __init__(self, ns_state: bool, we_state: bool):
+        """
+        The cross road contain attributes: waiting queue, pass in progress queue, light signal boolean
+        :param ns_state: A boolean which determine if it is green light for the north-south direction
+        :param we_state: A boolean which determine if it is green light for the west-east direction
+        """
+        self.west = [] # queue on the west side
+        self.east = [] # queue on the east side
+        self.north = [] # queue on the north side
+        self.south = [] # queue on the south side
+        self.all = [self.north, self.south, self.west, self.east] # all the queue
+        self.pass_in_prog = {} # the pass in progress queue
         self.ns_state = ns_state
         self.we_state = we_state
 
 
 class Car:
     def __init__(self, init_dist: int, cross_road: CrossRoad, init_dest: list, actions: list):
-        self.wait_time = 0
-        self.dest = init_dest
-        self.current_cross = cross_road
-        self.dist_to_cross = init_dist
-        self.actions = actions
-        self.cross_time = 2
-        self.updated = False
-        self.arrived = False
+        """
+        The Cars contain attributes: its own time, its previous cross road node,
+                                     its current crossroad queue, the length of the edge it is on
+                                     a sequence of the nodes it has to reach,
+                                     whether it is in the waiting queue/pass in progress queue,
+                                     the time it passes through a cross road, whether it has arrived.
+        :param init_dist: The length of the edge it is on
+        :param cross_road: The previous cross road node
+        :param init_dest: The current cross road queue
+        :param actions: A list contains all the nodes which the car is trying to get from position A to position B
+        """
+        self.wait_time = 0 # Its own time
+        self.dest = init_dest # The length of the edge it is on
+        self.current_cross = cross_road  # Its current crossroad queue
+        self.dist_to_cross = init_dist # Its previous cross road node
+        self.actions = actions # A sequence of the nodes it has to reach
+        self.cross_time = 2 # The time it passes through a cross road
+        self.updated = False # Whether it is in the waiting queue/pass in progress queue
+        self.arrived = False # Whether it has arrived
     #
     # def draw(self, x, y, w, h, screen, color=(255, 255, 255)):
     #     pygame.draw.rect(screen, color, (x, y, w, h))
 
-
+# this following will create the edges, cars, and the nodes
 G = nx.DiGraph()
 cross_roads = [CrossRoad(bool(random.randint(0, 1)), bool(random.randint(0, 1))) for i in range(9)]
 all_cars = [
@@ -39,7 +55,7 @@ all_cars = [
         3, cross_roads[4], cross_roads[2].south, [cross_roads[2], cross_roads[1]]
     )
 ]
-
+# the edges contain two important info: the length, and the direction
 G.add_edge(cross_roads[0], cross_roads[1], length='10', dest=cross_roads[1].west)
 G.add_edge(cross_roads[1], cross_roads[0], length='10', dest=cross_roads[0].east)
 G.add_edge(cross_roads[0], cross_roads[2], length='10', dest=cross_roads[2].north)
