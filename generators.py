@@ -2,25 +2,6 @@ import random
 import networkx as nx
 from cross import *
 
-
-def determine_orientation(x: int, cross_road: CrossRoad, col: int = 2) -> list:
-    """
-    Determines which orientation (n, s, w, or e) the car should exit from the destination crossroad
-    :param x: index of node in graph
-    :param cross_road: the destination crossroad
-    :param col:
-    :return:
-    """
-    if x < col:
-        return cross_road.north
-    elif x % col == 0:
-        return cross_road.west
-    elif (x + 1) % col == 0:
-        return cross_road.east
-    else:
-        return cross_road.south
-
-
 def generate_cars(cross_roads: list, G, col: int = 2, row: int = -1, num_cars: int = 2, max_dist: int = 5) -> list:
     """
     :param cross_roads: list of crossroads (nodes of the graph)
@@ -48,10 +29,11 @@ def generate_cars(cross_roads: list, G, col: int = 2, row: int = -1, num_cars: i
         ini = ini_fi_points[inf[0]]
         fi = ini_fi_points[inf[1]]
         path = nx.shortest_path(G, ini, fi)
+        path = path.pop(0)
 
-        out = determine_orientation(fi, cross_roads[fi], col)
+        destination = G[cross_roads[ini_fi_points[inf[1] - 1]]][cross_roads[fi]]['dest']
 
-        all_car.append(Car(random.randint(0, max_dist), cross_roads[ini], out, path))
+        all_car.append(Car(random.randint(0, max_dist), cross_roads[ini], destination, path))
 
     return all_car
 
