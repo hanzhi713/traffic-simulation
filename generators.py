@@ -33,7 +33,7 @@ def generate_cars(cross_roads: list, G, col: int = 2, row: int = -1, num_cars: i
 
         destination = G[cross_roads[ini_fi_points[inf[1] - 1]]][cross_roads[fi]]['dest']
 
-        all_car.append(Car(random.randint(0, max_dist), cross_roads[ini], destination, path))
+        all_car.append(Car(random.randint(0, max_dist), destination, path))
 
     return all_car
 
@@ -47,27 +47,32 @@ def generate_node(num: int = 2) -> list:
     return cross_roads
 
 
-def generate_edge(cross_roads: list, num: int = 2) -> nx.DiGraph:
+def generate_edge(cross_roads: list, col: int = 2, row : int = -1, len_lb : int = 10, len_ub : int = 10) -> nx.DiGraph:
     """
     :param cross_roads:
     :param num:
     :return:
     """
+    row = col if row == -1 else row
+    hori_len = [random.randint(len_lb, len_ub) for i in range(0, col - 1)]
+    verti_len = [random.randint(len_lb, len_ub) for i in range(0, row - 1)]
 
     gph = nx.DiGraph()
 
-    for i in range(num ** 2):
-        if num - i % num == 1 and i // num == num - 1:
+    for i in range(col ** 2):
+        if (i + 1) % col == 0 and i // col == row - 1:
             pass
-        elif num - i % num == 1:
-            gph.add_edge(cross_roads[i], cross_roads[i + num], length='10', dest=cross_roads[i + num].north)
-            gph.add_edge(cross_roads[i + num], cross_roads[i], length='10', dest=cross_roads[i].south)
-        elif i // num == num - 1:
-            gph.add_edge(cross_roads[i], cross_roads[i + 1], length='10', dest=cross_roads[i + 1].west)
-            gph.add_edge(cross_roads[i + 1], cross_roads[i], length='10', dest=cross_roads[i].east)
+        elif col - i % col == 1:
+            #rightmost
+            gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col], dest=cross_roads[i + col].north)
+            gph.add_edge(cross_roads[i + col], cross_roads[i], length=verti_len[i // col], dest=cross_roads[i].south)
+        elif i // col == row - 1:
+            #bottom
+            gph.add_edge(cross_roads[i], cross_roads[i + 1], length=hori_len[i % col], dest=cross_roads[i + 1].west)
+            gph.add_edge(cross_roads[i + 1], cross_roads[i], length=hori_len[i % col], dest=cross_roads[i].east)
         else:
-            gph.add_edge(cross_roads[i], cross_roads[i + 1], length='10', dest=cross_roads[i + 1].west)
-            gph.add_edge(cross_roads[i + 1], cross_roads[i], length='10', dest=cross_roads[i].east)
-            gph.add_edge(cross_roads[i], cross_roads[i + num], length='10', dest=cross_roads[i + num].north)
-            gph.add_edge(cross_roads[i + num], cross_roads[i], length='10', dest=cross_roads[i].south)
+            gph.add_edge(cross_roads[i], cross_roads[i + 1], length=hori_len[i % col], dest=cross_roads[i + 1].west)
+            gph.add_edge(cross_roads[i + 1], cross_roads[i], length=hori_len[i % col], dest=cross_roads[i].east)
+            gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col], dest=cross_roads[i + col].north)
+            gph.add_edge(cross_roads[i + col], cross_roads[i], length=verti_len[i // col], dest=cross_roads[i].south)
     return gph
