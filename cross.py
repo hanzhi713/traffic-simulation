@@ -10,12 +10,12 @@ class CrossRoad:
         :param ns_state: A boolean which determine if it is green light for the north-south direction
         :param we_state: A boolean which determine if it is green light for the west-east direction
         """
-        self.west = [] # queue on the west side
-        self.east = [] # queue on the east side
-        self.north = [] # queue on the north side
-        self.south = [] # queue on the south side
-        self.all = [self.north, self.south, self.west, self.east] # all the queues
-        self.pass_in_prog = {} # the pass in progress queue
+        self.west = []  # queue on the west side
+        self.east = []  # queue on the east side
+        self.north = []  # queue on the north side
+        self.south = []  # queue on the south side
+        self.all = [self.north, self.south, self.west, self.east]  # all the queues
+        self.pass_in_prog = {}  # the pass in progress queue
         self.ns_state = ns_state
         self.we_state = we_state
         self.id = id
@@ -33,16 +33,18 @@ class Car:
         :param init_dest: The current cross road queue
         :param actions: A list containing the reference to cross roads that this car will pass (that is, a representation of the car path)
         """
-        self.wait_time = 0 # Its own time
-        self.dest = init_dest # the reference to the next cross road's queue
-        self.previous_cross = None # Reference to the previous cross road
-        self.dist_to_cross = init_dist # Car's distance to the next cross road
+        self.wait_time = 0  # Its own time
+        self.dest = init_dest  # the reference to the next cross road's queue
+        self.previous_cross = None  # Reference to the previous cross road
+        self.dist_to_cross = init_dist  # Car's distance to the next cross road
         self.actions = actions
-        self.cross_time = 2 # The time required for it to pass through a cross road
-        self.updated = False # whether the car's status is already updated by the update_cross_roads method.
-        self.arrived = False # whether it has arrived at its destination
+        self.cross_time = 2  # The time required for it to pass through a cross road
+        self.updated = False  # whether the car's status is already updated by the update_cross_roads method.
+        self.arrived = False  # whether it has arrived at its destination
         self.id = id
 
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
 
 
 def update_cross_roads(all_cross_roads, time: int = 1):
@@ -80,7 +82,7 @@ def update_cross_roads(all_cross_roads, time: int = 1):
                     # update car's reference to the next cross road's queue
                     car.dest = edge['dest']
                 else:
-                    
+
                     car.arrived = True
 
         # then, update the queue of cars waiting to pass
@@ -108,7 +110,7 @@ def update_cross_roads(all_cross_roads, time: int = 1):
             for queue in cross_road.all[2:]:
                 if len(queue) == 0:
                     continue
-                
+
                 # compute each car's distance to the cross road
                 for car in queue:
                     car.dist_to_cross -= time
@@ -158,6 +160,7 @@ def update_all_cars(all_cars, time: int):
         car.wait_time += time
 
     return all_arrived
+
 
 def update(all_cars, all_cross_roads, time):
     update_cross_roads(all_cross_roads, time)
