@@ -43,8 +43,6 @@ class Car:
         self.arrived = False  # whether it has arrived at its destination
         self.id = id
 
-    def __setattr__(self, key, value):
-        self.__dict__[key] = value
 
 
 def update_cross_roads(all_cross_roads, time: int = 1):
