@@ -31,7 +31,20 @@ def generate_cars(cross_roads: list, G, col: int = 2, row: int = -1, num_cars: i
         path = nx.shortest_path(G, ini, fi)
         path = path.pop(0)
 
-        destination = G[cross_roads[ini_fi_points[inf[1] - 1]]][cross_roads[fi]]['dest']
+        #destination = G[cross_roads[ini_fi_points[inf[1] - 1]]][cross_roads[fi]]['dest']
+
+        if col - ini % col == 1:
+            #rightmost
+            destination = cross_roads[ini].east
+        elif ini // col == row - 1:
+            #bottom
+            destination = cross_roads[ini].south
+        elif ini // col == row:
+            #leftmost
+            destination = cross_roads[ini].west
+        else:
+            #top
+            destination = cross_roads[ini].north
 
         all_car.append(Car(random.randint(0, max_dist), destination, path))
 
@@ -65,6 +78,7 @@ def generate_edge(cross_roads: list, col: int = 2, row : int = -1, len_lb : int 
         elif col - i % col == 1:
             #rightmost
             gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col], dest=cross_roads[i + col].north)
+            #gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col], dest=cross_roads[i].south)
             gph.add_edge(cross_roads[i + col], cross_roads[i], length=verti_len[i // col], dest=cross_roads[i].south)
         elif i // col == row - 1:
             #bottom
