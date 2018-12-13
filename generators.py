@@ -46,15 +46,16 @@ def generate_cars(cross_roads: List[CrossRoad], G: nx.DiGraph, col: int = 2, row
     return all_car
 
 
-def generate_node(col: int = 2, row: int = -1) -> List[CrossRoad]:
+def generate_node(col: int = 2, row: int = -1, red_prob: int = 0.5) -> List[CrossRoad]:
     """
     :param col:
     :param row:
     :return:
     """
     row = col if row == -1 else row
-    cross_roads = [CrossRoad(bool(random.randint(0, 1)), bool(
-        random.randint(0, 1))) for i in range(col * row)]
+    rand_float = random.random()
+    red = True if rand_float > red_prob else False
+    cross_roads = [CrossRoad(red, not red) for i in range(col * row)]
     return cross_roads
 
 
