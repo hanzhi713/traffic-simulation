@@ -10,19 +10,20 @@ class CrossRoad:
         :param ns_state: A boolean which determine if it is green light for the north-south direction
         :param we_state: A boolean which determine if it is green light for the west-east direction
         """
-        self.west = []  # queue on the west side
-        self.east = []  # queue on the east side
-        self.north = []  # queue on the north side
-        self.south = []  # queue on the south side
-        self.all = [self.north, self.south, self.west, self.east]  # all the queues
-        self.pass_in_prog = {}  # the pass in progress queue
+        self.west: List[Car] = []  # queue on the west side
+        self.east: List[Car] = []  # queue on the east side
+        self.north: List[Car] = []  # queue on the north side
+        self.south: List[Car] = []  # queue on the south side
+        self.all = [self.north, self.south,
+                    self.west, self.east]  # all the queues
+        self.pass_in_prog: Dict[Car, int] = {}  # the pass in progress queue
         self.ns_state = ns_state
         self.we_state = we_state
         self.id = id
 
 
 class Car:
-    def __init__(self, init_dist: int, init_dest: list, actions: list, id=0):
+    def __init__(self, init_dist: int, init_dest: List[Car], actions: List[CrossRoad], id=0):
         """
         The Cars contain attributes: its own time, its previous cross road node,
                                      its current crossroad queue, the length of the edge it is on
@@ -35,17 +36,18 @@ class Car:
         """
         self.wait_time = 0  # Its own time
         self.dest = init_dest  # the reference to the next cross road's queue
-        self.previous_cross = None  # Reference to the previous cross road
+        # Reference to the previous cross road
+        self.previous_cross: Optional[CrossRoad] = None
         self.dist_to_cross = init_dist  # Car's distance to the next cross road
         self.actions = actions
         self.cross_time = 2  # The time required for it to pass through a cross road
-        self.updated = False  # whether the car's status is already updated by the update_cross_roads method.
+        # whether the car's status is already updated by the update_cross_roads method.
+        self.updated = False
         self.arrived = False  # whether it has arrived at its destination
         self.id = id
 
 
-
-def update_cross_roads(all_cross_roads, time: int = 1):
+def update_cross_roads(G: nx.DiGraph, all_cross_roads: List[CrossRoad], time: int = 1):
     """
     :param time: the global time step
     :return: None
@@ -75,7 +77,8 @@ def update_cross_roads(all_cross_roads, time: int = 1):
                     edge = G[cross_road][car.actions[0]]
 
                     # update the car's distance to the next cross road
-                    car.dist_to_cross = edge['length'] - time_at_cross + car.cross_time
+                    car.dist_to_cross = edge['length'] - \
+                        time_at_cross + car.cross_time
 
                     # update car's reference to the next cross road's queue
                     car.dest = edge['dest']
@@ -100,7 +103,7 @@ def update_cross_roads(all_cross_roads, time: int = 1):
                         # add this car to the pass_in_prog dictionary
                         cross_road.pass_in_prog[car] = -car.dist_to_cross
 
-                # remove cars that are already in pass_in_prog    
+                # remove cars that are already in pass_in_prog
                 queue[:] = [car for car in queue if car.dist_to_cross > 0]
 
         # if the cars are in the queues of west-east direction
@@ -119,11 +122,11 @@ def update_cross_roads(all_cross_roads, time: int = 1):
                         # add this car to the pass_in_prog dictionary
                         cross_road.pass_in_prog[car] = -car.dist_to_cross
 
-                # remove cars that are already in pass_in_prog    
+                # remove cars that are already in pass_in_prog
                 queue[:] = [car for car in queue if car.dist_to_cross > 0]
 
 
-def update_all_cars(all_cars, time: int):
+def update_all_cars(all_cars: List[Car], time: int) -> bool:
     """
     :param time: the global time step
     :return:
@@ -160,8 +163,8 @@ def update_all_cars(all_cars, time: int):
     return all_arrived
 
 
-def update(all_cars, all_cross_roads, time):
-    update_cross_roads(all_cross_roads, time)
+def update(G: nx.DiGraph, all_cars: List[Car], all_cross_roads: List[CrossRoad], time: int) -> bool:
+    update_cross_roads(G, all_cross_roads, time)
     all_arrived = update_all_cars(all_cars, time)
     return all_arrived
 
@@ -178,14 +181,22 @@ if __name__ == "__main__":
         )
     ]
     # the edges contain two important info: the length, and the direction
-    G.add_edge(cross_roads[0], cross_roads[1], length=10, dest=cross_roads[1].west)
-    G.add_edge(cross_roads[1], cross_roads[0], length=10, dest=cross_roads[0].east)
-    G.add_edge(cross_roads[0], cross_roads[2], length=10, dest=cross_roads[2].north)
-    G.add_edge(cross_roads[2], cross_roads[0], length=10, dest=cross_roads[0].south)
-    G.add_edge(cross_roads[1], cross_roads[3], length=10, dest=cross_roads[3].north)
-    G.add_edge(cross_roads[3], cross_roads[1], length=10, dest=cross_roads[1].south)
-    G.add_edge(cross_roads[3], cross_roads[2], length=10, dest=cross_roads[2].east)
-    G.add_edge(cross_roads[2], cross_roads[3], length=10, dest=cross_roads[3].west)
+    G.add_edge(cross_roads[0], cross_roads[1],
+               length=10, dest=cross_roads[1].west)
+    G.add_edge(cross_roads[1], cross_roads[0],
+               length=10, dest=cross_roads[0].east)
+    G.add_edge(cross_roads[0], cross_roads[2],
+               length=10, dest=cross_roads[2].north)
+    G.add_edge(cross_roads[2], cross_roads[0],
+               length=10, dest=cross_roads[0].south)
+    G.add_edge(cross_roads[1], cross_roads[3],
+               length=10, dest=cross_roads[3].north)
+    G.add_edge(cross_roads[3], cross_roads[1],
+               length=10, dest=cross_roads[1].south)
+    G.add_edge(cross_roads[3], cross_roads[2],
+               length=10, dest=cross_roads[2].east)
+    G.add_edge(cross_roads[2], cross_roads[3],
+               length=10, dest=cross_roads[3].west)
 
     for i in range(40):
         print(i)
