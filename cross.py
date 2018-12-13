@@ -84,7 +84,6 @@ def update_cross_roads(G: nx.DiGraph, all_cross_roads: List[CrossRoad], time: in
                     # update car's reference to the next cross road's queue
                     car.dest = edge['dest']
                 else:
-
                     car.arrived = True
 
         # then, update the queue of cars waiting to pass
