@@ -2,7 +2,9 @@ import random
 import networkx as nx
 from cross import *
 
-def generate_cars(cross_roads: list, G, col: int = 2, row: int = -1, num_cars: int = 2, max_dist: int = 5) -> list:
+
+def generate_cars(cross_roads: List[CrossRoad], G: nx.DiGraph, col: int = 2, row: int = -1, num_cars: int = 2,
+                  max_dist: int = 5) -> List[Car]:
     """
     :param cross_roads: list of crossroads (nodes of the graph)
     :param G: the graph
@@ -28,26 +30,34 @@ def generate_cars(cross_roads: list, G, col: int = 2, row: int = -1, num_cars: i
         inf = random.sample(range(0, num_init_point), 2)
         ini = ini_fi_points[inf[0]]
         fi = ini_fi_points[inf[1]]
-        path = nx.shortest_path(G, ini, fi)
-        path = path.pop(0)
+        path = nx.shortest_path(G, cross_roads[ini], cross_roads[fi])
 
-        destination = G[cross_roads[ini_fi_points[inf[1] - 1]]][cross_roads[fi]]['dest']
+        if ini < col:
+            destination = cross_roads[ini].north
+        elif col * (row - 1) <= ini < col * row:
+            destination = cross_roads[ini].south
+        elif ini in [i * col for i in range(1, row - 1)]:
+            destination = cross_roads[ini].west
+        else:
+            destination = cross_roads[ini].east
 
         all_car.append(Car(random.randint(0, max_dist), destination, path))
 
     return all_car
 
 
-def generate_node(num: int = 2) -> list:
+def generate_node(col: int = 2, row: int = -1) -> list:
     """
-    :param num:
+    :param col:
+    :param row:
     :return:
     """
-    cross_roads = [CrossRoad(bool(random.randint(0, 1)), bool(random.randint(0, 1))) for i in range(num ** 2)]
+    row = col if row == -1 else row
+    cross_roads = [CrossRoad(bool(random.randint(0, 1)), bool(random.randint(0, 1))) for i in range(col * row)]
     return cross_roads
 
 
-def generate_edge(cross_roads: list, col: int = 2, row : int = -1, len_lb : int = 10, len_ub : int = 10) -> nx.DiGraph:
+def generate_edge(cross_roads: list, col: int = 2, row: int = -1, len_lb: int = 10, len_ub: int = 10) -> nx.DiGraph:
     """
     :param cross_roads:
     :param num:
@@ -59,20 +69,22 @@ def generate_edge(cross_roads: list, col: int = 2, row : int = -1, len_lb : int 
 
     gph = nx.DiGraph()
 
-    for i in range(col ** 2):
+    for i in range(col * row):
         if (i + 1) % col == 0 and i // col == row - 1:
             pass
         elif col - i % col == 1:
-            #rightmost
-            gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col], dest=cross_roads[i + col].north)
+            # rightmost
+            gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col],
+                         dest=cross_roads[i + col].north)
             gph.add_edge(cross_roads[i + col], cross_roads[i], length=verti_len[i // col], dest=cross_roads[i].south)
         elif i // col == row - 1:
-            #bottom
+            # bottom
             gph.add_edge(cross_roads[i], cross_roads[i + 1], length=hori_len[i % col], dest=cross_roads[i + 1].west)
             gph.add_edge(cross_roads[i + 1], cross_roads[i], length=hori_len[i % col], dest=cross_roads[i].east)
         else:
             gph.add_edge(cross_roads[i], cross_roads[i + 1], length=hori_len[i % col], dest=cross_roads[i + 1].west)
             gph.add_edge(cross_roads[i + 1], cross_roads[i], length=hori_len[i % col], dest=cross_roads[i].east)
-            gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col], dest=cross_roads[i + col].north)
+            gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col],
+                         dest=cross_roads[i + col].north)
             gph.add_edge(cross_roads[i + col], cross_roads[i], length=verti_len[i // col], dest=cross_roads[i].south)
     return gph
