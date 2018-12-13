@@ -53,7 +53,8 @@ def generate_node(col: int = 2, row: int = -1) -> list:
     :return:
     """
     row = col if row == -1 else row
-    cross_roads = [CrossRoad(bool(random.randint(0, 1)), bool(random.randint(0, 1))) for i in range(col * row)]
+    cross_roads = [CrossRoad(bool(random.randint(0, 1)), bool(
+        random.randint(0, 1))) for i in range(col * row)]
     return cross_roads
 
 
@@ -73,10 +74,20 @@ def generate_edge(cross_roads: list, col: int = 2, row: int = -1, len_lb: int = 
         if (i + 1) % col == 0 and i // col == row - 1:
             pass
         elif col - i % col == 1:
+
+
+<< << << < HEAD
             # rightmost
             gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col],
                          dest=cross_roads[i + col].north)
-            gph.add_edge(cross_roads[i + col], cross_roads[i], length=verti_len[i // col], dest=cross_roads[i].south)
+== == == =
+            # rightmost
+            gph.add_edge(cross_roads[i], cross_roads[i + col],
+                         length=verti_len[i // col], dest=cross_roads[i + col].north)
+            # gph.add_edge(cross_roads[i], cross_roads[i + col], length=verti_len[i // col], dest=cross_roads[i].south)
+>>>>>> > 878d171615e78b6b305987799d0c86de77eda2ae
+            gph.add_edge(cross_roads[i + col], cross_roads[i],
+                         length=verti_len[i // col], dest=cross_roads[i].south)
         elif i // col == row - 1:
             # bottom
             gph.add_edge(cross_roads[i], cross_roads[i + 1], length=hori_len[i % col], dest=cross_roads[i + 1].west)
