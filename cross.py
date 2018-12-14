@@ -1,10 +1,11 @@
 import random
 import networkx as nx
+import numpy as np
 from typing import *
 
 
 class Car:
-    def __init__(self, init_dist: int, init_dest: list, actions: list, id=0):
+    def __init__(self, init_dist: Union[int, float], init_dest: list, actions: list, id=0):
         """
         The Cars contain attributes: its own time, its previous cross road node,
                                      its current crossroad queue, the length of the edge it is on
@@ -15,7 +16,7 @@ class Car:
         :param init_dest: The current cross road queue
         :param actions: A list containing the reference to cross roads that this car will pass (that is, a representation of the car path)
         """
-        self.wait_time = 0  # Its own time
+        self.wait_time: Union[int, float] = 0  # Its own time
         # the reference to the next cross road's queue
         self.dest: List[Car] = init_dest
         # Reference to the previous cross road
@@ -42,7 +43,8 @@ class CrossRoad:
         self.south: List[Car] = []  # queue on the south side
         self.all = [self.north, self.south,
                     self.west, self.east]  # all the queues
-        self.pass_in_prog: Dict[Car, int] = {}  # the pass in progress queue
+        # the pass in progress queue
+        self.pass_in_prog: Dict[Car, Union[int, float]] = {}
         self.ns_state = ns_state
         self.we_state = we_state
         self.id = id
@@ -55,10 +57,10 @@ class World:
         self.all_cross_roads = all_cross_roads
         self.all_cars = all_cars
         self.__all_cars__ = all_cars.copy()
-        self.time = 0
+        self.time: Union[int, float] = 0
         self.policy = policy
 
-    def update_cross_roads(self, time: int):
+    def update_cross_roads(self, time: Union[int, float]):
         """
         :param time: the global time step
         :return: None
@@ -111,6 +113,7 @@ class World:
                         # negative distance means it has arrived at this cross road
                         if car.dist_to_cross <= 0:
                             # add this car to the pass_in_prog dictionary
+                            car.dist_to_cross = 0
                             cross_road.pass_in_prog[car] = -car.dist_to_cross
 
                     # remove cars that are already in pass_in_prog
@@ -130,6 +133,7 @@ class World:
                         # negative distance means it has arrived at this cross road
                         if car.dist_to_cross <= 0:
                             # add this car to the pass_in_prog dictionary
+                            car.dist_to_cross = 0
                             cross_road.pass_in_prog[car] = -car.dist_to_cross
 
                     # remove cars that are already in pass_in_prog
@@ -139,7 +143,7 @@ class World:
                 for car in queue:
                     car.updated = True
 
-    def update_cars(self, time: int) -> bool:
+    def update_cars(self, time: Union[int, float]) -> bool:
         """
         :param time: the global time step
         :return:
@@ -175,7 +179,7 @@ class World:
 
         return all_arrived
 
-    def update_all(self, time: int) -> bool:
+    def update_all(self, time: Union[int, float]) -> bool:
         self.update_cross_roads(time)
         all_arrived = self.update_cars(time)
         self.time += time
@@ -186,10 +190,15 @@ class World:
         self.policy(self.G, self.all_cross_roads, self.all_cars, self.time)
 
     def stats(self):
-        total_wait_time = 0
-        for car in self.__all_cars__:
-            total_wait_time += car.wait_time
-        print("Total waiting time", total_wait_time)
+        wait_times = [car.wait_time for car in self.__all_cars__]
+        total_wait_time = sum(wait_times)
+        avg_wait_time = total_wait_time / len(self.__all_cars__)
+        std_wait_time = np.std(wait_times)
+        max_wait_time = max(wait_times)
+
+        stat_str = "Total waiting time {}\nAverage waiting time {}\nMaximum waiting time {}\nstd. of waiting time {}\n".format(total_wait_time, avg_wait_time,
+                                                                                                                               max_wait_time, std_wait_time)
+        print(stat_str)
 
 
 if __name__ == "__main__":
@@ -221,7 +230,7 @@ if __name__ == "__main__":
     G.add_edge(cross_roads[2], cross_roads[3],
                length=10, dest=cross_roads[3].west)
 
-    w = World(G, cross_roads, all_cars)
+    w = World(G, cross_roads, all_cars, lambda a, b, c, d: None)
 
     for i in range(40):
         print(i)

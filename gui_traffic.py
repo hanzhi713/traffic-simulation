@@ -23,7 +23,7 @@ def create_crosses(row: int, column: int, cr_width: int, cr_height: int,
     for i in range(row):
         for j in range(column):
             crosses.append(pygame.Rect(
-                street_width_x * (j + 1) + j * cr_width, 
+                street_width_x * (j + 1) + j * cr_width,
                 street_width_y * (i + 1) + i * cr_height,
                 cr_width, cr_height))
     return crosses
@@ -143,7 +143,7 @@ def main(screen: pygame.Surface, G: nx.DiGraph, cross_roads: List[CrossRoad], al
     while True:
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
-            break
+            exit()
 
         screen.fill(white)  # the background
         for st in streets:
@@ -163,11 +163,10 @@ def main(screen: pygame.Surface, G: nx.DiGraph, cross_roads: List[CrossRoad], al
             screen.blit(car_num, location)
 
         pygame.display.flip()
-        world.update_all(1)
+        world.update_all(0.8)
 
         remove_count = 0
         while True:
-            print(remove_count, len(all_cars))
             if all_cars[remove_count].arrived:
                 all_cars.pop(remove_count)
             else:
@@ -180,9 +179,11 @@ def main(screen: pygame.Surface, G: nx.DiGraph, cross_roads: List[CrossRoad], al
 
         clock.tick(30)
         print("Divider: *********************************")
+
     
     print("Simulation done")
-
+    world.stats()
+    
     while True:
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
