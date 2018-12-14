@@ -3,6 +3,32 @@ import networkx as nx
 from typing import *
 
 
+class Car:
+    def __init__(self, init_dist: int, init_dest: list, actions: list, id=0):
+        """
+        The Cars contain attributes: its own time, its previous cross road node,
+                                     its current crossroad queue, the length of the edge it is on
+                                     a sequence of the nodes it has to reach,
+                                     whether it is in the waiting queue/pass in progress queue,
+                                     the time it passes through a cross road, whether it has arrived.
+        :param init_dist: The length of the edge it is on
+        :param init_dest: The current cross road queue
+        :param actions: A list containing the reference to cross roads that this car will pass (that is, a representation of the car path)
+        """
+        self.wait_time = 0  # Its own time
+        # the reference to the next cross road's queue
+        self.dest: List[Car] = init_dest
+        # Reference to the previous cross road
+        self.previous_cross: Optional[object] = None
+        self.dist_to_cross = init_dist  # Car's distance to the next cross road
+        self.actions = actions
+        self.cross_time = 2  # The time required for it to pass through a cross road
+        # whether the car's status is already updated by the update_cross_roads method.
+        self.updated = False
+        self.arrived = False  # whether it has arrived at its destination
+        self.id = id
+
+
 class CrossRoad:
     def __init__(self, ns_state: bool, we_state: bool, id=0):
         """
@@ -19,31 +45,6 @@ class CrossRoad:
         self.pass_in_prog: Dict[Car, int] = {}  # the pass in progress queue
         self.ns_state = ns_state
         self.we_state = we_state
-        self.id = id
-
-
-class Car:
-    def __init__(self, init_dist: int, init_dest: List[Car], actions: List[CrossRoad], id=0):
-        """
-        The Cars contain attributes: its own time, its previous cross road node,
-                                     its current crossroad queue, the length of the edge it is on
-                                     a sequence of the nodes it has to reach,
-                                     whether it is in the waiting queue/pass in progress queue,
-                                     the time it passes through a cross road, whether it has arrived.
-        :param init_dist: The length of the edge it is on
-        :param init_dest: The current cross road queue
-        :param actions: A list containing the reference to cross roads that this car will pass (that is, a representation of the car path)
-        """
-        self.wait_time = 0  # Its own time
-        self.dest = init_dest  # the reference to the next cross road's queue
-        # Reference to the previous cross road
-        self.previous_cross: Optional[CrossRoad] = None
-        self.dist_to_cross = init_dist  # Car's distance to the next cross road
-        self.actions = actions
-        self.cross_time = 2  # The time required for it to pass through a cross road
-        # whether the car's status is already updated by the update_cross_roads method.
-        self.updated = False
-        self.arrived = False  # whether it has arrived at its destination
         self.id = id
 
 
@@ -199,7 +200,7 @@ if __name__ == "__main__":
 
     for i in range(40):
         print(i)
-        if update(all_cars, cross_roads, 1):
+        if update(G, all_cars, cross_roads, 1):
             break
 
         # for car in all_cars:
