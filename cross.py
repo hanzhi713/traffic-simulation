@@ -48,129 +48,148 @@ class CrossRoad:
         self.id = id
 
 
-def update_cross_roads(G: nx.DiGraph, all_cross_roads: List[CrossRoad], time: int = 1):
-    """
-    :param time: the global time step
-    :return: None
-    """
-    for cross_road in all_cross_roads:
-        # update pass_in_progress
-        # assuming pass_in_prog has unlimited capacity
-        for car in list(cross_road.pass_in_prog.keys()):
+class World:
+    def __init__(self, G: nx.DiGraph, all_cross_roads: List[CrossRoad], all_cars: List[Car],
+                 policy: Callable[[nx.DiGraph, List[CrossRoad], List[Car], int], None]):
+        self.G = G
+        self.all_cross_roads = all_cross_roads
+        self.all_cars = all_cars
+        self.__all_cars__ = all_cars.copy()
+        self.time = 0
+        self.policy = policy
 
-            # increase the time that each car has spent passing the cross road
-            cross_road.pass_in_prog[car] += time
-            car.updated = True
+    def update_cross_roads(self, time: int):
+        """
+        :param time: the global time step
+        :return: None
+        """
+        for cross_road in self.all_cross_roads:
+            # update pass_in_progress
+            # assuming pass_in_prog has unlimited capacity
+            for car in list(cross_road.pass_in_prog.keys()):
 
-            # if the time spent is greater than the predefined cross time,
-            # then the car has already passed the cross road.
-            if cross_road.pass_in_prog[car] >= car.cross_time:
-                # remove the car from the pass in progress dictionary
-                time_at_cross = cross_road.pass_in_prog.pop(car)
-
-                # if the car has not yet arrived at its final destination,
-                # place the car on the way to the next cross road
-                # assign the cross road that this car has just passes to this car's current cross
-                car.previous_cross = car.actions.pop(0)
-                if len(car.actions) > 0:
-
-                    # get the edge from the past cross road to the next cross road
-                    edge = G[cross_road][car.actions[0]]
-
-                    # update the car's distance to the next cross road
-                    car.dist_to_cross = edge['length'] - \
-                        time_at_cross + car.cross_time
-
-                    # update car's reference to the next cross road's queue
-                    car.dest = edge['dest']
-                else:
-                    car.arrived = True
-
-        # then, update the queue of cars waiting to pass
-        # if the cars are in the queues of north-south direction
-        if cross_road.ns_state:
-            for queue in cross_road.all[:2]:
-                if len(queue) == 0:
-                    continue
-
-                # compute each car's distance to the cross road
-                for car in queue:
-                    car.dist_to_cross -= time
-                    car.updated = True
-
-                    # negative distance means it has arrived at this cross road
-                    if car.dist_to_cross <= 0:
-                        # add this car to the pass_in_prog dictionary
-                        cross_road.pass_in_prog[car] = -car.dist_to_cross
-
-                # remove cars that are already in pass_in_prog
-                queue[:] = [car for car in queue if car.dist_to_cross > 0]
-
-        # if the cars are in the queues of west-east direction
-        if cross_road.we_state:
-            for queue in cross_road.all[2:]:
-                if len(queue) == 0:
-                    continue
-
-                # compute each car's distance to the cross road
-                for car in queue:
-                    car.dist_to_cross -= time
-                    car.updated = True
-
-                    # negative distance means it has arrived at this cross road
-                    if car.dist_to_cross <= 0:
-                        # add this car to the pass_in_prog dictionary
-                        cross_road.pass_in_prog[car] = -car.dist_to_cross
-
-                # remove cars that are already in pass_in_prog
-                queue[:] = [car for car in queue if car.dist_to_cross > 0]
-
-        for queue in cross_road.all:
-            for car in queue:
+                # increase the time that each car has spent passing the cross road
+                cross_road.pass_in_prog[car] += time
                 car.updated = True
 
+                # if the time spent is greater than the predefined cross time,
+                # then the car has already passed the cross road.
+                if cross_road.pass_in_prog[car] >= car.cross_time:
+                    # remove the car from the pass in progress dictionary
+                    time_at_cross = cross_road.pass_in_prog.pop(car)
 
-def update_all_cars(all_cars: List[Car], time: int) -> bool:
-    """
-    :param time: the global time step
-    :return:
-    Assumption: All cars' velocities are 1
-                The length of each car is 1
-                The length of the street is measured using car length
-    Warning: Must be executed after update_cross_roads
-    """
-    all_arrived = True
-    for car in all_cars:
+                    # if the car has not yet arrived at its final destination,
+                    # place the car on the way to the next cross road
+                    # assign the cross road that this car has just passes to this car's current cross
+                    car.previous_cross = car.actions.pop(0)
+                    if len(car.actions) > 0:
 
-        if car.arrived:
-            continue
+                        # get the edge from the past cross road to the next cross road
+                        edge = self.G[cross_road][car.actions[0]]
 
-        all_arrived = False
-        # if the car has not been updated by the update_cross_roads method
-        # namely, the car is not in the waiting queue or the pass in progress dict
-        if not car.updated:
-            # that means the car is on the way to the next queue
-            # update the distance by the amount of time
-            car.dist_to_cross -= time
+                        # update the car's distance to the next cross road
+                        car.dist_to_cross = edge['length'] - \
+                            time_at_cross + car.cross_time
 
-            # if the car's distance to the next cross road is smaller than the length of the queue,
-            # that means the car has reached the tail of the queue,
-            # and therefore we append the car to the queue
-            if car.dist_to_cross <= len(car.dest) and car not in car.dest:
-                car.dest.append(car)
+                        # update car's reference to the next cross road's queue
+                        car.dest = edge['dest']
+                    else:
+                        car.arrived = True
 
-        # clear the flag for the next update
-        car.updated = False
+            # then, update the queue of cars waiting to pass
+            # if the cars are in the queues of north-south direction
+            if cross_road.ns_state:
+                for queue in cross_road.all[:2]:
+                    if len(queue) == 0:
+                        continue
 
-        car.wait_time += time
+                    # compute each car's distance to the cross road
+                    for car in queue:
+                        car.dist_to_cross -= time
+                        car.updated = True
 
-    return all_arrived
+                        # negative distance means it has arrived at this cross road
+                        if car.dist_to_cross <= 0:
+                            # add this car to the pass_in_prog dictionary
+                            cross_road.pass_in_prog[car] = -car.dist_to_cross
 
+                    # remove cars that are already in pass_in_prog
+                    queue[:] = [car for car in queue if car.dist_to_cross > 0]
 
-def update(G: nx.DiGraph, all_cars: List[Car], all_cross_roads: List[CrossRoad], time: int) -> bool:
-    update_cross_roads(G, all_cross_roads, time)
-    all_arrived = update_all_cars(all_cars, time)
-    return all_arrived
+            # if the cars are in the queues of west-east direction
+            if cross_road.we_state:
+                for queue in cross_road.all[2:]:
+                    if len(queue) == 0:
+                        continue
+
+                    # compute each car's distance to the cross road
+                    for car in queue:
+                        car.dist_to_cross -= time
+                        car.updated = True
+
+                        # negative distance means it has arrived at this cross road
+                        if car.dist_to_cross <= 0:
+                            # add this car to the pass_in_prog dictionary
+                            cross_road.pass_in_prog[car] = -car.dist_to_cross
+
+                    # remove cars that are already in pass_in_prog
+                    queue[:] = [car for car in queue if car.dist_to_cross > 0]
+
+            for queue in cross_road.all:
+                for car in queue:
+                    car.updated = True
+
+    def update_cars(self, time: int) -> bool:
+        """
+        :param time: the global time step
+        :return:
+        Assumption: All cars' velocities are 1
+                    The length of each car is 1
+                    The length of the street is measured using car length
+        Warning: Must be executed after update_cross_roads
+        """
+        all_arrived = True
+        for car in self.all_cars:
+
+            if car.arrived:
+                continue
+
+            all_arrived = False
+            # if the car has not been updated by the update_cross_roads method
+            # namely, the car is not in the waiting queue or the pass in progress dict
+            if not car.updated:
+                # that means the car is on the way to the next queue
+                # update the distance by the amount of time
+                car.dist_to_cross -= time
+
+                # if the car's distance to the next cross road is smaller than the length of the queue,
+                # that means the car has reached the tail of the queue,
+                # and therefore we append the car to the queue
+                if car.dist_to_cross <= len(car.dest) and car not in car.dest:
+                    car.dest.append(car)
+
+            # clear the flag for the next update
+            car.updated = False
+
+            car.wait_time += time
+
+        return all_arrived
+
+    def update_all(self, time: int) -> bool:
+        self.update_cross_roads(time)
+        all_arrived = self.update_cars(time)
+        self.time += time
+        self.exec_policy()
+        return all_arrived
+
+    def exec_policy(self):
+        self.policy(self.G, self.all_cross_roads, self.all_cars, self.time)
+
+    def stats(self):
+        total_wait_time = 0
+        for car in self.__all_cars__:
+            total_wait_time += car.wait_time
+        print("Total waiting time", total_wait_time)
 
 
 if __name__ == "__main__":
@@ -202,10 +221,9 @@ if __name__ == "__main__":
     G.add_edge(cross_roads[2], cross_roads[3],
                length=10, dest=cross_roads[3].west)
 
+    w = World(G, cross_roads, all_cars)
+
     for i in range(40):
         print(i)
-        if update(G, all_cars, cross_roads, 1):
+        if w.update_all(1):
             break
-
-        # for car in all_cars:
-        #     print(car[0].)

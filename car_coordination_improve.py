@@ -1,6 +1,5 @@
-from cross import *
-import networkx as nx
-from cross import Car
+from cross import CrossRoad, Car
+from typing import List
 import pygame
 
 

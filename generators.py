@@ -1,5 +1,4 @@
 import random
-import networkx as nx
 from cross import *
 
 
@@ -46,17 +45,15 @@ def generate_cars(cross_roads: List[CrossRoad], G: nx.DiGraph, col: int = 2, row
     return all_car
 
 
-def generate_node(col: int = 2, row: int = -1, red_prob: int = 0.5) -> List[CrossRoad]:
+def generate_node(col: int = 2, row: int = -1, red_prob: float = 0.5) -> List[CrossRoad]:
     """
     :param col:
     :param row:
     :return:
     """
     row = col if row == -1 else row
-    rand_float = random.random()
-    red = True if rand_float > red_prob else False
-    cross_roads = [CrossRoad(red, not red) for i in range(col * row)]
-    return cross_roads
+    red = True if random.random() > red_prob else False
+    return [CrossRoad(red, not red) for i in range(col * row)]
 
 
 def generate_edge(cross_roads: list, col: int = 2, row: int = -1, len_lb: int = 10, len_ub: int = 10) -> nx.DiGraph:
