@@ -125,6 +125,10 @@ def update_cross_roads(G: nx.DiGraph, all_cross_roads: List[CrossRoad], time: in
                 # remove cars that are already in pass_in_prog
                 queue[:] = [car for car in queue if car.dist_to_cross > 0]
 
+        for queue in cross_road.all:
+            for car in queue:
+                car.updated = True
+
 
 def update_all_cars(all_cars: List[Car], time: int) -> bool:
     """
