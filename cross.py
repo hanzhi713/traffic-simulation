@@ -80,7 +80,6 @@ def update_cross_roads(all_cross_roads, time: int = 1):
                     # update car's reference to the next cross road's queue
                     car.dest = edge['dest']
                 else:
-
                     car.arrived = True
 
         # then, update the queue of cars waiting to pass

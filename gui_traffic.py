@@ -49,7 +49,7 @@ def main(G, cross_roads, all_car):
             screen.fill(red, i.location)
             screen.blit(car_num, i.location)
         pygame.display.flip()
-        #move_car(cross_roads, all_car)
+        move_car(cross_roads, all_car)
         clock.tick(1)
         print("Divider: *********************************")
         # move_car(cross_roads, all_car)
