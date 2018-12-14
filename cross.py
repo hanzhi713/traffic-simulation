@@ -56,7 +56,7 @@ class World:
         self.G = G
         self.all_cross_roads = all_cross_roads
         self.all_cars = all_cars
-        self.__all_cars__ = all_cars.copy()
+        self.__all_cars__ = all_cars[:]
         self.time: Union[int, float] = 0
         self.policy = policy
 
@@ -99,7 +99,7 @@ class World:
                         car.arrived = True
 
             # then, update the queue of cars waiting to pass
-            # if the cars are in the queues of north-south direction
+            # if the cars are in the queues of north-south direction and the traffic light is green,
             if cross_road.ns_state:
                 for queue in cross_road.all[:2]:
                     if len(queue) == 0:
@@ -113,11 +113,33 @@ class World:
                         # negative distance means it has arrived at this cross road
                         if car.dist_to_cross <= 0:
                             # add this car to the pass_in_prog dictionary
-                            car.dist_to_cross = 0
                             cross_road.pass_in_prog[car] = -car.dist_to_cross
+                            car.dist_to_cross = 0
 
                     # remove cars that are already in pass_in_prog
                     queue[:] = [car for car in queue if car.dist_to_cross > 0]
+
+            # if the traffic light is not green, we need to make sure that cars will not
+            # acquire negative dist_to_cross values (i.e. we won't let then go through the sto line!)
+            else:
+                
+                for queue in cross_road.all[:2]:
+                    if len(queue) == 0:
+                        continue
+
+                    dist_move_back: Union[int, float] = 0
+                    front_car = queue[-1]
+
+                    # if the front car passes the stop line
+                    if front_car.dist_to_cross < 0:
+                        dist_move_back = -front_car.dist_to_cross
+
+                        # move it back
+                        front_car.dist_to_cross = 0
+                    
+                    # also shift subsequent cars by dist_move_back
+                    for car in queue[:len(queue) - 1]:
+                        car.dist_to_cross += dist_move_back
 
             # if the cars are in the queues of west-east direction
             if cross_road.we_state:
@@ -125,19 +147,27 @@ class World:
                     if len(queue) == 0:
                         continue
 
-                    # compute each car's distance to the cross road
                     for car in queue:
                         car.dist_to_cross -= time
                         car.updated = True
 
-                        # negative distance means it has arrived at this cross road
                         if car.dist_to_cross <= 0:
-                            # add this car to the pass_in_prog dictionary
-                            car.dist_to_cross = 0
                             cross_road.pass_in_prog[car] = -car.dist_to_cross
+                            car.dist_to_cross = 0
 
-                    # remove cars that are already in pass_in_prog
                     queue[:] = [car for car in queue if car.dist_to_cross > 0]
+                
+            else:
+                for queue in cross_road.all[2:]:
+                    if len(queue) == 0:
+                        continue
+                    dist_move_back = 0
+                    front_car = queue[-1]
+                    if front_car.dist_to_cross < 0:
+                        dist_move_back = -front_car.dist_to_cross
+                        front_car.dist_to_cross = 0
+                    for car in queue[:len(queue) - 1]:
+                        car.dist_to_cross -= dist_move_back
 
             for queue in cross_road.all:
                 for car in queue:
@@ -180,8 +210,8 @@ class World:
         return all_arrived
 
     def update_all(self, time: Union[int, float]) -> bool:
-        self.update_cross_roads(time)
         all_arrived = self.update_cars(time)
+        self.update_cross_roads(time)
         self.time += time
         self.exec_policy()
         return all_arrived
