@@ -36,6 +36,15 @@ def move_car(G: nx.DiGraph, cross_roads: List[c.CrossRoad], all_car: List[c.Car]
 def main(G: nx.DiGraph, cross_roads: List[c.CrossRoad], all_car: List[c.Car], crosses: List[pygame.Rect]):
     pygame.init()
     while True:
+        remove_count = 0
+        while True:
+            if all_car[remove_count].arrived:
+                all_car.pop(remove_count)
+            else:
+                remove_count += 1
+            if remove_count >= len(all_car):
+                break
+
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
             break
@@ -51,18 +60,9 @@ def main(G: nx.DiGraph, cross_roads: List[c.CrossRoad], all_car: List[c.Car], cr
             screen.fill(red, i.location)
             screen.blit(car_num, i.location)
 
-        remove_count = 0
-        while True:
-            if all_car[remove_count].arrived:
-                all_car.pop(remove_count)
-            else:
-                remove_count += 1
-            if remove_count >= len(all_car):
-                break
-
         pygame.display.flip()
         move_car(G, cross_roads, all_car)
-        clock.tick(1)
+        clock.tick(4)
         print("Divider: *********************************")
         # move_car(cross_roads, all_car)
 
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     """get the cross_roads and edges and cars ready!!"""
     crosses = create_crosses()
-    cross_roads = generators.generate_node(col=column, row=row)
+    cross_roads = generators.generate_node(col=column, row=row,red_prob=0)
     G = generators.generate_edge(cross_roads, col=column, row=row)
     # import matplotlib.pyplot as plt
     # import networkx as nx
