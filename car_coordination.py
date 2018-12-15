@@ -1,6 +1,4 @@
 from cross import *
-import networkx as nx
-from cross import Car
 
 
 def get_the_location(G: nx.DiGraph, cross_roads: List[CrossRoad], car: Car, column1: int, row1: int, cr_width: int = 50,

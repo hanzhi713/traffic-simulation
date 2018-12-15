@@ -1,8 +1,8 @@
 import pygame
 import car_coordination_improve
 import generators
-import cross as c
-import networkx as nx
+from cross import nx, World, CrossRoad, Car
+from policies import tl_global_const
 from typing import *
 
 white = [255, 255, 255]
@@ -13,8 +13,8 @@ green = [0, 255, 0]
 pink = [255, 192, 203]
 
 
-def create_crosses(row: int, column: int, cr_width: int, cr_height: int, street_width_x: int, street_width_y: int) -> \
-        List[pygame.Rect]:
+def create_crosses(row: int, column: int, cr_width: int, cr_height: int,
+                   street_width_x: int, street_width_y: int) -> List[pygame.Rect]:
     """
     To get all the coordination of the crossroads in a list
     :return: a list contains all the crossroads coordinations
@@ -23,14 +23,14 @@ def create_crosses(row: int, column: int, cr_width: int, cr_height: int, street_
     for i in range(row):
         for j in range(column):
             crosses.append(pygame.Rect(
-                street_width_x * (j + 1) + j * cr_width, street_width_y * (i + 1) + i * cr_height,
-                cr_width,
-                cr_height))
+                street_width_x * (j + 1) + j * cr_width,
+                street_width_y * (i + 1) + i * cr_height,
+                cr_width, cr_height))
     return crosses
 
 
-def create_streets(crosses: List[pygame.Rect], row: int, column: int, screen_size_x: int, screen_size_y: int) -> List[
-    pygame.Rect]:
+def create_streets(crosses: List[pygame.Rect], row: int, column: int,
+                   screen_size_x: int, screen_size_y: int) -> List[pygame.Rect]:
     """
     To get all the coordination of the streets in a list.
     Use polygon to connect all adjacent crosses
@@ -44,7 +44,8 @@ def create_streets(crosses: List[pygame.Rect], row: int, column: int, screen_siz
 
             pointlist = [(0, crosses[cross_num].y),
                          (crosses[cross_num].x, crosses[cross_num].y),
-                         (crosses[cross_num].x, crosses[cross_num].y + crosses[cross_num].height),
+                         (crosses[cross_num].x, crosses[cross_num].y +
+                          crosses[cross_num].height),
                          (0, crosses[cross_num].y + crosses[cross_num].height)]
             streets.append(pygame.draw.polygon(screen, yellow, pointlist))
 
@@ -53,7 +54,8 @@ def create_streets(crosses: List[pygame.Rect], row: int, column: int, screen_siz
 
             pointlist = [(screen_size_x, crosses[cross_num].y),
                          (crosses[cross_num].x, crosses[cross_num].y),
-                         (crosses[cross_num].x, crosses[cross_num].y + crosses[cross_num].height),
+                         (crosses[cross_num].x, crosses[cross_num].y +
+                          crosses[cross_num].height),
                          (screen_size_x, crosses[cross_num].y + crosses[cross_num].height)]
             streets.append(pygame.draw.polygon(screen, yellow, pointlist))
 
@@ -62,7 +64,8 @@ def create_streets(crosses: List[pygame.Rect], row: int, column: int, screen_siz
 
             pointlist = [(crosses[cross_num].x + crosses[cross_num].width, crosses[cross_num].y),
                          (crosses[cross_num + 1].x, crosses[cross_num + 1].y),
-                         (crosses[cross_num + 1].x, crosses[cross_num + 1].y + crosses[cross_num + 1].height),
+                         (crosses[cross_num + 1].x, crosses[cross_num +
+                                                            1].y + crosses[cross_num + 1].height),
                          (crosses[cross_num].x + crosses[cross_num].width,
                           crosses[cross_num].y + crosses[cross_num].height)]
             streets.append(pygame.draw.polygon(screen, yellow, pointlist))
@@ -74,7 +77,8 @@ def create_streets(crosses: List[pygame.Rect], row: int, column: int, screen_siz
 
             pointlist = [(crosses[cross_num].x, 0),
                          (crosses[cross_num].x, crosses[cross_num].y),
-                         (crosses[cross_num].x + crosses[cross_num].width, crosses[cross_num].y),
+                         (crosses[cross_num].x +
+                          crosses[cross_num].width, crosses[cross_num].y),
                          (crosses[cross_num].x + crosses[cross_num].width, 0)]
             streets.append(pygame.draw.polygon(screen, yellow, pointlist))
 
@@ -83,7 +87,8 @@ def create_streets(crosses: List[pygame.Rect], row: int, column: int, screen_siz
 
             pointlist = [(crosses[cross_num].x, screen_size_y),
                          (crosses[cross_num].x, crosses[cross_num].y),
-                         (crosses[cross_num].x + crosses[cross_num].width, crosses[cross_num].y),
+                         (crosses[cross_num].x +
+                          crosses[cross_num].width, crosses[cross_num].y),
                          (crosses[cross_num].x + crosses[cross_num].width, screen_size_y)]
             streets.append(pygame.draw.polygon(screen, yellow, pointlist))
 
@@ -102,7 +107,8 @@ def create_streets(crosses: List[pygame.Rect], row: int, column: int, screen_siz
     return streets
 
 
-def draw_lights(screen: pygame.Surface, cross_rect: pygame.Rect, cross_road: c.CrossRoad, light_offset: List):
+def draw_lights(screen: pygame.Surface, cross_rect: pygame.Rect,
+                cross_road: CrossRoad, light_offset: List[int]) -> None:
     """
     Draw individual light according to each cross road status
     :param screen:
@@ -123,56 +129,65 @@ def draw_lights(screen: pygame.Surface, cross_rect: pygame.Rect, cross_road: c.C
         screen.fill(red, cross_rect.inflate(*we_light))
 
 
-def move_car(G: nx.DiGraph, cross_roads: List[c.CrossRoad], all_car: List[c.Car]):
+def main(screen: pygame.Surface, G: nx.DiGraph, cross_roads: List[CrossRoad], all_cars: List[Car],
+         crosses: List[pygame.Rect], streets: List[pygame.Rect], light_offset: List[int]) -> None:
     """
-    call the cross program and update the system
-    :return: None
+    The main method
     """
-    c.update(G, all_car, cross_roads, 1)
-
-
-def main(screen: pygame.Surface, G: nx.DiGraph, cross_roads: List[c.CrossRoad], all_car: List[c.Car],
-         crosses: List[pygame.Rect],
-         streets: List[pygame.Rect],
-         light_offset: List):
     pygame.init()
     font = pygame.font.SysFont('Arial', 10)
     clock = pygame.time.Clock()
 
+    world = World(G, cross_roads, all_cars, tl_global_const)
+
     while True:
+        event = pygame.event.poll()
+        if event.type == pygame.QUIT:
+            exit()
+
+        screen.fill(white)  # the background
+        for st in streets:
+            screen.fill(yellow, st)  # the streets
+        for i, cross in enumerate(crosses):
+            screen.fill(blue, cross)  # the crossroads
+            # draw the lights according to its state
+            draw_lights(screen, cross, cross_roads[i], light_offset)
+
+        for num, car in enumerate(all_cars, 1):  # all the car locations
+            location = car_coordination_improve.get_the_location(crosses, cross_roads, car,
+                                                                 car_length)  # init to cross need to improve
+            print(location, car.dist_to_cross)
+
+            car_num = font.render(str(num), True, [0, 0, 0])
+            screen.fill(pink, location)
+            screen.blit(car_num, location)
+
+        pygame.display.flip()
+        world.update_all(0.8)
+
         remove_count = 0
         while True:
-            if all_car[remove_count].arrived:
-                all_car.pop(remove_count)
+            if all_cars[remove_count].arrived:
+                all_cars.pop(remove_count)
             else:
                 remove_count += 1
-            if remove_count >= len(all_car):
+            if remove_count >= len(all_cars):
                 break
 
+        if len(all_cars) == 0:
+            break
+
+        clock.tick(30)
+        print("Divider: *********************************")
+
+    
+    print("Simulation done")
+    world.stats()
+    
+    while True:
         event = pygame.event.poll()
         if event.type == pygame.QUIT:
             break
-
-        screen.fill(white)  # the background
-        for i in streets:
-            screen.fill(yellow, i)  # the streets
-        for count, i in enumerate(crosses):
-            screen.fill(blue, i)  # the crossroads
-            draw_lights(screen, i, cross_roads[count], light_offset)  # draw the lights according to its state
-
-        for count, i in enumerate(all_car, 1):  # all the car locations
-            i.location = car_coordination_improve.get_the_location(crosses, cross_roads, i,
-                                                                   car_length)  # init to cross need to improve
-            print(i.location, i.dist_to_cross)
-
-            car_num = font.render(str(count), True, [0, 0, 0])
-            screen.fill(pink, i.location)
-            screen.blit(car_num, i.location)
-
-        pygame.display.flip()
-        move_car(G, cross_roads, all_car)
-        clock.tick(4)
-        print("Divider: *********************************")
 
 
 if __name__ == "__main__":
@@ -193,12 +208,15 @@ if __name__ == "__main__":
     car_length = 10
 
     """Get the location of crossroad and street in pygame.Rect. Ready to draw them"""
-    crosses = create_crosses(row, column, cr_width, cr_height, street_width_x, street_width_y)
-    streets = create_streets(crosses, row, column, screen_size_x, screen_size_y)
+    crosses = create_crosses(row, column, cr_width,
+                             cr_height, street_width_x, street_width_y)
+    streets = create_streets(crosses, row, column,
+                             screen_size_x, screen_size_y)
 
     """Generate the crossroad objects, the graph, and all the car objects"""
     cross_roads = generators.generate_node(col=column, row=row, red_prob=1)
     G = generators.generate_edge(cross_roads, col=column, row=row)
-    all_car = generators.generate_cars(cross_roads, G, col=column, row=row, num_cars=1)
+    all_cars = generators.generate_cars(
+        cross_roads, G, col=column, row=row, num_cars=3)
 
-    main(screen, G, cross_roads, all_car, crosses, streets, light_offset)
+    main(screen, G, cross_roads, all_cars, crosses, streets, light_offset)
