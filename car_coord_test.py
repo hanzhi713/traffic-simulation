@@ -1,6 +1,6 @@
 import pygame
 import car_coordination_improve
-import generators
+import manual_gen_car
 from cross import nx, World, CrossRoad, Car
 from policies import tl_global_const
 from typing import *
@@ -26,6 +26,7 @@ def create_crosses(row: int, column: int, cr_width: int, cr_height: int,
                 street_width_x * (j + 1) + j * cr_width,
                 street_width_y * (i + 1) + i * cr_height,
                 cr_width, cr_height))
+    print("cross 0 is", crosses[0].x, crosses[0].y)
     return crosses
 
 
@@ -129,7 +130,6 @@ def draw_lights(screen: pygame.Surface, cross_rect: pygame.Rect,
         screen.fill(red, cross_rect.inflate(*we_light))
 
 
-
 def main(screen: pygame.Surface, column: int, row: int, G: nx.DiGraph, cross_roads: List[CrossRoad],
          all_cars: List[Car],
          crosses: List[pygame.Rect], streets: List[pygame.Rect], light_offset: List[int]) -> None:
@@ -194,7 +194,6 @@ def main(screen: pygame.Surface, column: int, row: int, G: nx.DiGraph, cross_roa
             break
 
 
-
 if __name__ == "__main__":
     """
     set all the parameters
@@ -211,7 +210,7 @@ if __name__ == "__main__":
     street_width_x = (screen_size_x - column * cr_width) // (column + 1)
     street_width_y = (screen_size_y - row * cr_height) // (row + 1)
     car_length = 10
-    car_num = 5
+    car_num = 1
 
     """Get the location of crossroad and street in pygame.Rect. Ready to draw them"""
     crosses = create_crosses(row, column, cr_width,
@@ -220,9 +219,14 @@ if __name__ == "__main__":
                              screen_size_x, screen_size_y)
 
     """Generate the crossroad objects, the graph, and all the car objects"""
-    cross_roads = generators.generate_node(col=column, row=row, red_prob=1)
-    G = generators.generate_edge(cross_roads, col=column, row=row)
-    all_cars = generators.generate_cars(
-        cross_roads, G, col=column, row=row, num_cars=car_num)
+    cross_roads = manual_gen_car.generate_node(col=column, row=row, red_prob=1)
+    G = manual_gen_car.generate_edge(cross_roads, col=column, row=row)
 
+    """Here is all the parameter for generating a car"""
+    init_dist = [10]
+    init_dest = [cross_roads[0].north]
+    actions = [[cross_roads[0], cross_roads[1], cross_roads[2]]]
+    all_cars = manual_gen_car.generate_cars(init_dist, init_dest, actions)
+
+    """MAIN PROGRAM"""
     main(screen, column, row, G, cross_roads, all_cars, crosses, streets, light_offset)
