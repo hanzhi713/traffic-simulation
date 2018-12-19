@@ -1,22 +1,22 @@
-<rect(606, 670, 10, 10)> 2
-<rect(394, 658, 10, 10)> 1
-<rect(182, 224, 10, 10)> 1
-<rect(394, 706, 10, 10)> 5
-<rect(394, 224, 10, 10)> 1
-<rect(606, 646, 10, 10)> 0
-<rect(182, 260, 10, 10)> 4
-<rect(250, 404, 10, 10)> 4
-<rect(182, 694, 10, 10)> 4
-<rect(394, 658, 10, 10)> 1
-<rect(394, 682, 10, 10)> 3
-<rect(202, 404, 10, 10)> 0
-<rect(606, 236, 10, 10)> 2
-<rect(182, 224, 10, 10)> 1
-<rect(606, 670, 10, 10)> 2
-<rect(394, 682, 10, 10)> 3
-<rect(182, 224, 10, 10)> 1
-<rect(606, 212, 10, 10)> 0
-<rect(394, 248, 10, 10)> 3
-<rect(394, 224, 10, 10)> 1
+"C:\Program Files\Python36\python.exe" "D:/University of Virginia/Github/traffic-simulation/gui_traffic.py"
+pygame 1.9.4
+Hello from the pygame community. https://www.pygame.org/contribute.html
+Debug: 0 0 <cross.CrossRoad object at 0x00000151A6B8CDA0> False
+Traceback (most recent call last):
+  File "D:/University of Virginia/Github/traffic-simulation/gui_traffic.py", line 228, in <module>
+<rect(182, 110, 10, 10)> 0
+    main(screen, column, row, G, cross_roads, all_cars, crosses, streets, light_offset)
+Debug: 0 0 <cross.CrossRoad object at 0x00000151A6B8CDA0> False
+<rect(182, 62, 10, 10)> 4
+Debug: 6 2 <cross.CrossRoad object at 0x00000151A6B93080> False
+<rect(103, 480, 10, 10)> 3
+Debug: 9 1 <cross.CrossRoad object at 0x00000151A6B93160> False
+ACTION Index Error?
+  File "D:/University of Virginia/Github/traffic-simulation/gui_traffic.py", line 165, in main
+None 5
+    screen.blit(car_num, location)
+TypeError: invalid destination position for blit
 
-1 and 15 overlap during generation
+
+
+??? With car_num = 5
